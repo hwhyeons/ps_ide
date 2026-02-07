@@ -5,7 +5,9 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
-  runCode: (payload) => ipcRenderer.invoke('run-code', payload)
+  runCode: (payload) => ipcRenderer.invoke('run-code', payload),
+  getLastSession: () => ipcRenderer.invoke('get-last-session'),
+  saveLastSession: (sessionData) => ipcRenderer.invoke('save-last-session', sessionData)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

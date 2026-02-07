@@ -42,17 +42,59 @@ public class Main {
 
 function App() {
   const [language, setLanguage] = useState('cpp')
-  const [code, setCode] = useState(DEFAULT_CODE['cpp'])
+  // 언어별 코드를 저장하는 객체 상태
+  const [codes, setCodes] = useState(DEFAULT_CODE)
+  // 현재 에디터에 표시되는 코드는 codes[language]를 사용
   const [testCases, setTestCases] = useState([
     { id: 1, input: '10 20', expectedOutput: '30', actualOutput: '', status: 'idle' }
   ])
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [overallStatus, setOverallStatus] = useState('Ready')
+  const [isLoaded, setIsLoaded] = useState(false) // 초기 로딩 완료 여부
+
+  // 초기 세션 복원
+  React.useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const lastSession = await window.api.getLastSession()
+        if (lastSession) {
+          if (lastSession.language) setLanguage(lastSession.language)
+          if (lastSession.codes) setCodes(prev => ({ ...prev, ...lastSession.codes }))
+          if (lastSession.testCases) setTestCases(lastSession.testCases)
+        }
+      } catch (err) {
+        console.error('Failed to load last session:', err)
+      } finally {
+        setIsLoaded(true)
+      }
+    }
+    loadSession()
+  }, [])
+
+  // 자동 저장 (Debounce: 1초)
+  React.useEffect(() => {
+    if (!isLoaded) return
+
+    const timer = setTimeout(() => {
+      window.api.saveLastSession({
+        language,
+        codes,
+        testCases
+      })
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [language, codes, testCases, isLoaded])
 
   const handleEditorChange = (value) => {
-    setCode(value)
+    setCodes(prev => ({
+      ...prev,
+      [language]: value
+    }))
   }
+
+  // ... (editorOptions remains the same)
 
   const editorOptions = {
     minimap: { enabled: false },
@@ -101,9 +143,7 @@ function App() {
   }
 
   const handleLanguageChange = (e) => {
-    const newLang = e.target.value
-    setLanguage(newLang)
-    setCode(DEFAULT_CODE[newLang])
+    setLanguage(e.target.value)
   }
 
   const addTestCase = () => {
@@ -148,7 +188,7 @@ function App() {
       try {
         const result = await window.api.runCode({
           language,
-          code,
+          code: codes[language],
           input: currentTestCases[i].input
         })
 
@@ -225,7 +265,7 @@ function App() {
             height="100%"
             theme="light"
             language={languageMap[language]}
-            value={code}
+            value={codes[language]}
             onChange={handleEditorChange}
             options={editorOptions}
             loading={<div className="h-full flex items-center justify-center text-gray-400 font-medium">Loading Editor...</div>}

@@ -119,6 +119,15 @@ app.whenReady().then(() => {
     }
   })
 
+  // IPC Handlers for Last Session Persistence
+  ipcMain.handle('get-last-session', () => {
+    return store.get('lastSession')
+  })
+
+  ipcMain.handle('save-last-session', (_, sessionData) => {
+    store.set('lastSession', sessionData)
+  })
+
   // IPC Handler for Code Execution
   ipcMain.handle('run-code', async (_, { language, code, input }) => {
     const compilers = store.get('compilers')
