@@ -41,6 +41,8 @@ npm run dev
 ### 4. 빌드 (실행 파일 생성)
 ```bash
 npm run build
+# 또는
+npx electron-builder build --mac dmg
 ```
 빌드된 파일은 `dist` 또는 `release` 폴더에 생성됨.
 
