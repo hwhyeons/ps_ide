@@ -5,6 +5,7 @@
 *   **사용 가능 언어:** C++, Python, Java
 *   Syntax Highlighting만 제공 (자동 완성 및 에러 밑줄 X)
 *   여러 개의 테스트 케이스(Input/Expected Output) 관리
+*   파일 드래그 드롭 지원
 
 
 

@@ -218,6 +218,39 @@ function App() {
     setOverallStatus('Finished')
   }
 
+  const handleDragOver = (e) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (!file) return
+
+    const extension = file.name.split('.').pop().toLowerCase()
+    
+    let isValid = false
+    if (language === 'cpp' && (extension === 'cpp' || extension === 'c')) isValid = true
+    if (language === 'python' && extension === 'py') isValid = true
+    if (language === 'java' && extension === 'java') isValid = true
+
+    if (!isValid) {
+      alert(`Current language is ${language}. Only .${language === 'python' ? 'py' : language === 'cpp' ? 'cpp, .c' : 'java'} files are allowed.`)
+      return
+    }
+
+    if (window.confirm('기존 코드가 삭제되고 파일 내용으로 대체됩니다. 계속하시겠습니까?')) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setCodes(prev => ({
+          ...prev,
+          [language]: event.target.result
+        }))
+      }
+      reader.readAsText(file)
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
       <SettingsModal 
@@ -260,7 +293,11 @@ function App() {
       </header>
 
       <main className="flex-1 flex overflow-hidden">
-        <div className="flex-1 border-r border-gray-200 relative">
+        <div 
+          className="flex-1 border-r border-gray-200 relative"
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
           <Editor
             height="100%"
             theme="light"
