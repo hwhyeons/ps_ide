@@ -48,14 +48,14 @@ const executeCommand = (command, args, input = '', timeout = 5000) => {
     proc.on('close', (code) => {
       clearTimeout(timer)
       if (!killed) {
-        resolve({ stdout: stdoutData, stderr: stderrData, code })
+        resolve({ stdout: stdoutData, stderr: stderrData, code }) // 정상 종료시 resolve()
       }
     })
 
     proc.on('error', (err) => {
       clearTimeout(timer)
       if (!killed) {
-        reject({ message: err.message })
+        reject({ message: err.message }) // 오류 나면 reject()
       }
     })
   })
@@ -141,8 +141,12 @@ app.whenReady().then(() => {
         const binaryPath = path.join(tmpDir, 'main.out')
         fs.writeFileSync(sourcePath, code)
 
-        // Compile
-        await executeCommand(compilers.cpp, [sourcePath, '-o', binaryPath])
+        // Compile부터 진행
+        const compileResult = await executeCommand(compilers.cpp, [sourcePath, '-o', binaryPath])
+        if (compileResult.code !== 0) { // 컴파일 단계에서 실패한 경우
+          const lines = (compileResult.stderr || 'Compilation failed').split('\n').filter(l => l.trim())
+          return { success: false, errorType: 'compile', error: lines.slice(0, 5).join('\n') }
+        }
 
         // Execute
         result = await executeCommand(binaryPath, [], input)
@@ -160,13 +164,26 @@ app.whenReady().then(() => {
         fs.writeFileSync(sourcePath, code)
 
         // Compile
-        await executeCommand(compilers.java, [sourcePath])
+        const compileResult = await executeCommand(compilers.java, [sourcePath])
+        if (compileResult.code !== 0) {
+          const lines = (compileResult.stderr || 'Compilation failed').split('\n').filter(l => l.trim())
+          return { success: false, errorType: 'compile', error: lines.slice(0, 5).join('\n') }
+        }
 
         // Execute
         // Java 실행 시 classpath 설정 필요 (-cp)
         result = await executeCommand('java', ['-cp', tmpDir, className], input)
       } else {
         throw new Error('Unsupported language')
+      }
+
+      // Runtime error check
+      if (result.code !== 0) {
+        const lines = (result.stderr || '').split('\n').filter(l => l.trim())
+        const errorMsg = lines.length > 0
+          ? lines.slice(0, 3).join('\n')
+          : `Runtime Error (exit code: ${result.code})`
+        return { success: false, errorType: 'runtime', error: errorMsg }
       }
 
       return { success: true, ...result }

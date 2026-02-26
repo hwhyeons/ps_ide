@@ -195,15 +195,15 @@ function App() {
         if (result.success) {
           const actual = result.stdout ? result.stdout.trim() : ''
           const expected = currentTestCases[i].expectedOutput ? currentTestCases[i].expectedOutput.trim() : ''
-          
+
           currentTestCases[i].actualOutput = result.stdout
           currentTestCases[i].status = (actual === expected) ? 'correct' : 'wrong'
-          
+
           if (result.stderr) {
              currentTestCases[i].actualOutput += `\n[Stderr]\n${result.stderr}`
           }
         } else {
-          currentTestCases[i].actualOutput = `Error: ${result.error}`
+          currentTestCases[i].actualOutput = result.error || 'Unknown error'
           currentTestCases[i].status = 'error'
         }
       } catch (err) {
@@ -367,7 +367,7 @@ function App() {
                 {tc.actualOutput && (
                   <div className="px-4 pb-4">
                     <label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Actual Output</label>
-                    <pre className={`p-2 rounded-lg text-xs font-mono whitespace-pre-wrap overflow-x-auto ${tc.status === 'correct' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    <pre className={`p-2 rounded-lg text-xs font-mono whitespace-pre-wrap overflow-x-auto ${tc.status === 'correct' ? 'bg-green-50 text-green-700 border border-green-100' : tc.status === 'error' ? 'bg-orange-50 text-orange-700 border border-orange-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
                       {tc.actualOutput}
                     </pre>
                   </div>
