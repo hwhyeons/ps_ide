@@ -146,6 +146,15 @@ function App() {
     setLanguage(e.target.value)
   }
 
+  const handleReset = () => {
+    if (window.confirm('초기화를 하시겠습니까?')) {
+      setCodes(prev => ({
+        ...prev,
+        [language]: DEFAULT_CODE[language]
+      }))
+    }
+  }
+
   const addTestCase = () => {
     setTestCases([...testCases, { 
       id: Date.now(), 
@@ -273,7 +282,7 @@ function App() {
           >
             ⚙️ Settings
           </button>
-          <select 
+          <select
             value={language}
             onChange={handleLanguageChange}
             className="bg-white text-sm p-1.5 rounded border border-gray-300 outline-none focus:border-blue-500 font-medium"
@@ -282,6 +291,13 @@ function App() {
             <option value="python">Python</option>
             <option value="java">Java</option>
           </select>
+          <button
+            onClick={handleReset}
+            disabled={isRunning}
+            className="text-sm text-gray-500 hover:text-red-500 border border-gray-300 hover:border-red-400 px-3 py-1.5 rounded font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            초기화
+          </button>
           <button 
             onClick={handleRun}
             disabled={isRunning}
